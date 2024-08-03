@@ -1,116 +1,68 @@
-const mainElement = document.querySelector(".main-element");
-const test = document.querySelector(".test");
-const backgroundImg = document.querySelector("#background-img");
-const gptResponseElement = document.querySelector(".gpt-response");
-const headline = document.querySelector(".headline");
-const lactoseIntolerant = document.querySelector("#lactose-intolerant");
-const vegan = document.querySelector("#vegan");
-const loadingContainer = document.querySelector("#loading-container");
-const allergies = document.querySelector(".allergies");
-const darkLightButton = document.querySelector(".dark-light-button");
-const userWantAnotherRecipe = document.querySelector(".want-another-recipe");
-const tryAgainBtn = document.querySelector(".try-again-btn");
-const recipeButtons = document.querySelectorAll(".recipe-button");
-const sendRecipeToUserInboxBtn = document.querySelector(
-  ".send-recipe-to-user-inbox"
-);
-const userEmail = document.querySelector("#user-email");
-const sendEmailButton = document.querySelector(".send-email-btn");
-const emailSection = document.querySelector(".email-section");
-const paperPlane = document.querySelector(".fa-paper-plane");
-const sendToUserInboxBtn = document.querySelector(".send-to-user-inbox-btn");
-console.log(sendToUserInboxBtn);
+import {
+  defaultRecipe,
+  createQuery,
+  displayElements,
+  displayElementsFlex,
+  displayElementsGrid,
+  removeElements,
+  emptyTheElement,
+  resetCheckedStateToFalse,
+  playAudio,
+  pauseAudio,
+  stopAudio,
+  createAudio,
+  createUserRecipe,
+  audioElement,
+  alert_message,
+} from "./js_utilities/functions_and_variables.js";
 
-const dietaryRequirements = Array.from(
-  document.querySelectorAll(".dietary-requirements")
-);
-const otherDietaryRequirements = document.querySelector(
-  "#other-dietary-requirements"
-);
-const userText = document.querySelector("#user-text");
-let textContent;
-let imageUrl;
-let isLactoseIntolerant;
-let dishOriginCountry;
-let currentChar;
+import {
+  mainElement,
+  backgroundImg,
+  gptResponseElement,
+  headline,
+  loadingContainer,
+  allergies,
+  darkLightButton,
+  userWantAnotherRecipe,
+  tryAgainBtn,
+  recipeButtons,
+  sendRecipeToUserInboxBtn,
+  recording,
+  userEmail,
+  emailSection,
+  sendToUserInboxBtn,
+  dietaryRequirements,
+  otherDietaryRequirements,
+  userText,
+  video,
+  canvas,
+  takePicture,
+  context,
+  chatGptVisionText,
+  videoBtnCanvas,
+  pictureSectionHeadline,
+  wantToTakeAPicture,
+  emailRecipe,
+  pictureEmailSection,
+  previousPage,
+  sendToUserInbox,
+  wrapper,
+} from "./js_utilities/query_selector.js";
 
-const defaultRecipe = `
-Apologies, but our AI Recipe-Making expert is unavailable. Please try again later. In the meantime, please find one of our favourite recipes below.
+let currentCameraIndex = 0;
+const switchCameraButton = document.getElementById("switchCamera");
+let emailObject;
 
-  <h2>Ingredients</h2>
-  <ul>
-    <li>1 tbsp olive oil</li>
-    <li>4 rashers smoked streaky bacon, finely chopped</li>
-    <li>2 medium onions, finely chopped</li>
-    <li>2 carrots, trimmed and finely chopped</li>
-    <li>2 celery sticks, finely chopped</li>
-    <li>2 garlic cloves finely chopped</li>
-    <li>2-3 sprigs rosemary leaves picked and finely chopped</li>
-    <li>500g beef mince</li>
-  </ul>
-  
-  <h2>For the Bolognese Sauce</h2>
-  <ul>
-    <li>2 x 400g tins plum tomatoes</li>
-    <li>Small pack basil leaves picked, ¾ finely chopped and the rest left whole for garnish</li>
-    <li>1 tsp dried oregano</li>
-    <li>2 fresh bay leaves</li>
-    <li>2 tbsp tomato purée</li>
-    <li>1 beef stock cube</li>
-    <li>1 red chilli deseeded and finely chopped (optional)</li>
-    <li>125ml red wine</li>
-    <li>6 cherry tomatoes sliced in half</li>
-  </ul>
-  
-  <h2>To Season and Serve</h2>
-  <ul>
-    <li>75g parmesan grated, plus extra to serve</li>
-    <li>400g spaghetti</li>
-    <li>Crusty bread to serve (optional)</li>
-  </ul>
-  
-  <h2>Method</h2>
-  <ol>
-    <li>Put a large saucepan on a medium heat and add 1 tbsp olive oil.</li>
-    <li>Add 4 finely chopped bacon rashers and fry for 10 mins until golden and crisp.</li>
-    <li>Reduce the heat and add the 2 onions, 2 carrots, 2 celery sticks, 2 garlic cloves and the leaves from 2-3 sprigs rosemary, all finely chopped, then fry for 10 mins. Stir the veg often until it softens.</li>
-    <li>Increase the heat to medium-high, add 500g beef mince and cook stirring for 3-4 mins until the meat is browned all over.</li>
-    <li>Add 2 tins plum tomatoes, the finely chopped leaves from ¾ small pack basil, 1 tsp dried oregano, 2 bay leaves, 2 tbsp tomato purée, 1 beef stock cube, 1 deseeded and finely chopped red chilli (if using), 125ml red wine and 6 halved cherry tomatoes. Stir with a wooden spoon, breaking up the plum tomatoes.</li>
-    <li>Bring to the boil, reduce to a gentle simmer and cover with a lid. Cook for 1 hr 15 mins stirring occasionally, until you have a rich, thick sauce.</li>
-    <li>Add the 75g grated parmesan, check the seasoning and stir.</li>
-    <li>When the bolognese is nearly finished, cook 400g spaghetti following the pack instructions.</li>
-    <li>Drain the spaghetti and either stir into the bolognese sauce, or serve the sauce on top. Serve with more grated parmesan, the remaining basil leaves and crusty bread, if you like.</li>
-  </ol>
-`;
-let errorMessage = `
+wantToTakeAPicture.addEventListener("click", () => {
+  removeElements([pictureSectionHeadline, wantToTakeAPicture]);
+  displayElementsFlex([videoBtnCanvas]);
+  console.log("Picture taken");
+});
 
-      ${defaultRecipe}
-  `;
-
-tryAgainBtn.style.display = "none";
-
-
-
-sendToUserInboxBtn.addEventListener("click", () => {
-  if (userEmail.value !== "") {
-    alert("an email has been sent to your inbox");
-  }
-})
-
-function createQuery(myObject) {
-  let esc = encodeURIComponent;
-  let query = Object.keys(myObject)
-    .map((k) => esc(k) + "=" + esc(myObject[k]))
-    .join("&");
-  return query;
-}
-
-function loopOverArrayOfElements(array, display) {
-  array.forEach((elememt) => {
-    elememt.style.display = display;
-    elememt.style.transition = "all 2s";
-  });
-}
+takePicture.addEventListener("click", () => {
+  console.log("take a picture");
+});
 
 otherDietaryRequirements.addEventListener("click", () => {
   if (otherDietaryRequirements.checked) {
@@ -120,236 +72,271 @@ otherDietaryRequirements.addEventListener("click", () => {
   }
 });
 
-function displayElements(array) {
-  loopOverArrayOfElements(array, "block");
-}
-
-function displayElementsGrid(array) {
-  loopOverArrayOfElements(array, "grid");
-}
-
-function removeElements(array) {
-  loopOverArrayOfElements(array, "none");
-}
-
-function emptyTheElement(elememt) {
-  elememt.innerHTML = "";
-}
+emailRecipe.addEventListener("click", () => {
+  displayElementsGrid([pictureEmailSection]);
+  removeElements([emailRecipe]);
+});
 
 sendRecipeToUserInboxBtn.addEventListener("click", () => {
+  console.log("Email to user");
   displayElementsGrid([emailSection]);
   removeElements([sendRecipeToUserInboxBtn]);
 });
 
-function resetCheckedStateToFalse(array) {
-  array.forEach((requirement) => {
-    if (requirement.checked) {
-      requirement.checked = false;
-    }
-  });
-}
-
-userWantAnotherRecipe.addEventListener("click", () => {
-  displayElements([headline, allergies, ...recipeButtons, mainElement]);
-  removeElements([userText, emailSection]);
-  emptyTheElement(gptResponseElement);
-  resetCheckedStateToFalse(dietaryRequirements);
-  userText.value = "";
+previousPage.addEventListener("click", () => {
+  removeElements([
+    videoBtnCanvas,
+    pictureEmailSection,
+    previousPage,
+    emailRecipe,
+  ]);
+  displayElements([pictureSectionHeadline, wantToTakeAPicture]);
+  emptyTheElement(chatGptVisionText);
 });
 
 tryAgainBtn.addEventListener("click", () => {
-  displayElements([headline, allergies, ...recipeButtons]);
+  console.log("Try again");
+  displayElements([headline, allergies, ...recipeButtons, mainElement]);
   removeElements([gptResponseElement, tryAgainBtn]);
   emptyTheElement(gptResponseElement);
 });
 
 darkLightButton.addEventListener("change", () => {
-  let color = darkLightButton.checked
-    ? "rgb(67, 63, 63)"
-    : "rgb(183, 235, 183)";
-  [
-    gptResponseElement,
-    lactoseIntolerant,
-    allergies,
-    headline,
-    userWantAnotherRecipe,
-    sendRecipeToUserInboxBtn,
-    tryAgainBtn,
-    ...recipeButtons,
-  ].forEach((element) => {
-    element.style.setProperty("--green", color);
-    element.style.transition = "background-color 0.5s ease";
+  document.body.classList.toggle("dark-mode", darkLightButton.checked);
+});
+
+const user_email_elememts = [...userEmail];
+user_email_elememts.forEach((element) => {
+  element.addEventListener("input", (e) => {
+    emailObject = {
+      [element.name]: element.value,
+    };
+    console.log(e.target.value);
   });
 });
 
-sendToUserInboxBtn.addEventListener("click", () => {
-  let emailOBject = {
-    [userEmail.name]: userEmail.value,
-  };
-  fetch("/server.js", {
+console.log(emailObject);
+
+sendToUserInbox.addEventListener("click", () => {
+  fetch(`/email_picture_section?${createQuery(emailObject)}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(emailOBject),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Response for user email", data);
-    })
-    .catch((error) => {
-      console.error("Error", error);
-    });
+    body: JSON.stringify({ pictureTextSection: chatGptVisionText.textContent }),
+  }).then((response) => {
+    if (response.ok) {
+      console.log("image posted");
+      alert(`${alert_message}`);
+      return response.json();
+    } else {
+      throw new Error("Failed to post image");
+    }
+  });
+});
 
-  fetch(`/email?${createQuery(emailOBject)}`)
+sendToUserInboxBtn.addEventListener("click", () => {
+  console.log(emailObject);
+  fetch(`/email?${createQuery(emailObject)}`)
     .then((response) => response.json())
     .then((data) => {
-      console.log({ data }, { emailQuery });
+      if (data.emailStatus === "250 OK , completed") {
+        alert(`${alert_message}`);
+      } else {
+        alert("Invalid email address, try again");
+      }
     })
     .catch((error) => console.error("Error:", error));
 });
 
+console.log(emailObject);
+
 recipeButtons.forEach((button) => {
   console.log(userText.value);
   button.addEventListener("click", async () => {
-    recipeTextLoaded = false;
-    recipeImageLoaded = false;
-
-    let userRecipe = {
-      [button.name]: button.value,
-      array: [...dietaryRequirements, ...[userText]],
-      I_do_not_eat: userText.placeholder,
-      loopOverArray: function () {
-        this.array.forEach((dietaryRequirement) => {
-          this[dietaryRequirement.name] = dietaryRequirement.checked;
-          if (dietaryRequirement.value !== "on") {
-            this[dietaryRequirement.name] = dietaryRequirement.value;
-          }
-        });
-      },
-    };
-
-    userRecipe.loopOverArray();
+    displayElements([loadingContainer]);
+    removeElements([mainElement]);
+    const userRecipe = createUserRecipe(button, dietaryRequirements, userText);
     console.log(userRecipe);
 
-    dishOriginCountry = button.value; // needed ?∫
-    displayElements([loadingContainer]);
-    gptResponseElement.innerHTML = "";
-    fetch("/server.js", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userRecipe),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Response from the back-end", data);
-      })
-      .catch((error) => {
-        console.error("Error", error);
-      });
-    fetch(`/openai?${createQuery(userRecipe)}`)
-      .then((response) => response.json())
-      .then((data) => {
-        // CREATE IMAGE PROMISE
-        const imagePromise = new Promise((resolve) => {
-          console.log("image begin");
+    const data = {};
 
-          // Wait for background image to be loaded
-          backgroundImg.addEventListener("load", () => {
-            resolve();
-            mainElement.style.display = "none";
+    const eventSource = new EventSource(`/stream?${createQuery(userRecipe)}`);
 
-            console.log("image end");
-          });
+    eventSource.onmessage = async function (event) {
+      let eventData = JSON.parse(event.data);
+      if (eventData.message) {
+        if (eventData.message === "stop") {
+          eventSource.close();
+          return;
+        }
+        displayElements([gptResponseElement]);
+        gptResponseElement.textContent += eventData.message;
+        return;
+      } else if (eventData.errorMessage === "invalid_api_key") {
+        eventSource.close();
+        console.log(eventData.errorMessage);
+        displayElements([gptResponseElement, tryAgainBtn]);
+        removeElements([loadingContainer]);
+        gptResponseElement.innerHTML = defaultRecipe;
+        return;
+      }
 
-          // Set background image
-          imageUrl = data.image.data[0].url;
-          backgroundImg.src = imageUrl;
+      if (eventData.audio) {
+        data.audio = eventData.audio;
+      }
+      if (eventData.image) {
+        data.image = eventData.image;
+      }
+
+      console.log("data.audio", eventData.audio);
+      console.log("data.image", eventData.image);
+
+      if (data.audio && data.image) {
+        createImage(data);
+
+        const { speedBtn, speechBtns } = createTextToSpeech(data);
+
+        userWantAnotherRecipe.addEventListener("click", () => {
+          displayElements([headline, allergies, ...recipeButtons, mainElement]);
+          removeElements([userText, emailSection, recording]);
+          emptyTheElement(gptResponseElement);
+          resetCheckedStateToFalse(dietaryRequirements);
+          userText.value = "";
+          data.audio = "";
+          stopAudio(audioElement);
         });
 
-        // Update text contennt once image is loaded
-        Promise.all([imagePromise])
-          .then(() => {
-            console.log("image loaded:", Promise.all.status);
-            textContent = data.text.choices[0].message.content;
-            gptResponseElement.innerHTML = `
-            <div class="recording">
-              <i class="fa-solid fa-microphone" name="microphone"></i>
-              <i class="fa-solid fa-pause" name="pause"></i>
-              <i class="fa-solid fa-stop" name="stop"></i>
-              <div class="speed-wrapper">
-              <label for="speed">Speed</label>
-              <input type="number" name="speed" id="speed" min="0.25" max="2" step="0.25" value="1">
-              </div>
-            </div>
-            ${textContent}`;
-            removeElements([headline, allergies, ...recipeButtons]);
-            displayElements([
-              userWantAnotherRecipe,
-              gptResponseElement,
-              sendRecipeToUserInboxBtn,
-            ]);
+        speedBtn.addEventListener("change", () => {
+          audioElement.playbackRate = speedBtn.value || 1;
+        });
 
-            const utterance = new SpeechSynthesisUtterance();
-
-            const speechBtns = Array.from(
-              document.querySelectorAll(".fa-solid")
-            );
-            const speedBtn = document.querySelector("#speed");
-
-            console.log(speechBtns);
-
-            function readRecipe(recipe) {
-              if (speechSynthesis.paused && speechSynthesis.speaking) {
-                return speechSynthesis.resume();
-              }
-              if (speechSynthesis.speaking) return;
-              utterance.text = recipe;
-              utterance.rate = speedBtn.value || 1;
-              speechSynthesis.speak(utterance);
+        speechBtns.forEach((speechBtn) => {
+          speechBtn.addEventListener("click", () => {
+            const btnName = speechBtn.getAttribute("name");
+            if (btnName === "microphone") {
+              playAudio(audioElement);
+            } else if (btnName === "pause") {
+              pauseAudio(audioElement);
+            } else if (btnName === "stop") {
+              stopAudio(audioElement);
             }
-            function pauseReading() {
-              if (speechSynthesis.speaking) speechSynthesis.pause();
-            }
-
-            function stopREeading() {
-              speechSynthesis.resume();
-              speechSynthesis.cancel();
-            }
-
-            speechBtns.forEach((speechBtn) => {
-              speechBtn.addEventListener("click", () => {
-                const btnName = speechBtn.getAttribute("name");
-                if (btnName === "microphone") {
-                  console.log(btnName);
-                  readRecipe(`${textContent}`);
-                } else if (btnName === "pause") {
-                  pauseReading();
-                } else if (btnName === "stop") {
-                  stopREeading();
-                }
-              });
-            });
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            gptResponseElement.innerHTML = `${errorMessage}`;
-            removeElements([headline, allergies, ...recipeButtons]);
-            displayElements([tryAgainBtn, gptResponseElement]);
-          })
-          .finally(() => {
-            //HIDES LOADING WHETHER OR NOT IT FAILS
-            loadingContainer.style.display = "none";
-            console.log("All promises have been settled");
           });
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        gptResponseElement.innerHTML = `${errorMessage}`;
-        removeElements([headline, allergies, ...recipeButtons]);
-        displayElements([tryAgainBtn, gptResponseElement]);
-      });
+        });
+      }
+    };
   });
+});
+
+function createImage(param) {
+  removeElements([loadingContainer]);
+  const imageUrl = param.image.data[0].url;
+  backgroundImg.src = imageUrl;
+  return backgroundImg;
+}
+
+function createTextToSpeech(param) {
+  displayElementsFlex([recording]);
+  displayElements([sendRecipeToUserInboxBtn, userWantAnotherRecipe]);
+  const speechBtns = Array.from(document.querySelectorAll(".fa-solid"));
+  const speedBtn = document.querySelector("#speed");
+  audioElement.src = createAudio(param.audio);
+  audioElement.stop = function () {
+    this.pause();
+    this.currentTime = 0;
+  };
+  return { speedBtn, speechBtns };
+}
+
+// Picture section
+async function getVideoDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter((device) => device.kind === "videoinput");
+}
+
+async function startCamera(deviceId) {
+  const constraints = {
+    audio: false,
+    video: {
+      deviceId: deviceId ? { exact: deviceId } : undefined,
+      width: { min: 1024, ideal: 1280, max: 1920 },
+      height: { min: 576, ideal: 720, max: 1080 },
+    },
+  };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    await video.play();
+  } catch (error) {
+    console.error("Error accessing camera:", error);
+  }
+}
+
+async function initializeCamera() {
+  const videoDevices = await getVideoDevices();
+
+  if (videoDevices.length > 1) {
+    switchCameraButton.style.display = "block";
+    switchCameraButton.addEventListener("click", () => {
+      currentCameraIndex = (currentCameraIndex + 1) % videoDevices.length;
+      startCamera(videoDevices[currentCameraIndex].deviceId);
+    });
+  } else {
+    switchCameraButton.style.display = "none";
+  }
+
+  // Start with the rear camera if available
+  const rearCameraDevice = videoDevices.find(
+    (device) =>
+      device.label.toLowerCase().includes("back") ||
+      device.label.toLowerCase().includes("rear")
+  );
+  startCamera(
+    rearCameraDevice ? rearCameraDevice.deviceId : videoDevices[0].deviceId
+  );
+}
+
+initializeCamera();
+
+function capturePhoto() {
+  context.drawImage(video, 0, 0, 400, 100);
+}
+
+takePicture.addEventListener("click", () => {
+  capturePhoto();
+  const imageData = canvas.toDataURL("image/png");
+  console.log("Captured photo:", imageData);
+
+  fetch("/upload", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ image: imageData }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        console.log("Image uploaded successfully");
+        return response.json();
+      } else {
+        throw new Error("Failed to upload image");
+      }
+    })
+    .then((data) => {
+      const chatGptVisionResponse = data.message.content;
+      chatGptVisionText.textContent = chatGptVisionResponse;
+      displayElements([emailRecipe, previousPage]);
+      displayElementsGrid([pictureEmailSection]);
+    })
+    .catch((error) => {
+      console.error("Error", error);
+    });
+});
+
+// Menu icon toggle
+const menuIcon = document.querySelector(".menu-icon");
+
+menuIcon.addEventListener("click", () => {
+  wrapper.classList.toggle("change");
 });
